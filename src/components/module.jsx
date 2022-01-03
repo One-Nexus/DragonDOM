@@ -2,14 +2,15 @@ import { htmlElementAttributes } from 'html-element-attributes'
 
 import generateElementClasses from '../utilities/generateElementClasses';
 
-import ModuleContext from './context';
+import ModuleContext from '../contexts/module';
+import useModuleContext from '../hooks/useModuleContext';
 
 const modifierGlue = '--';
 const componentGlue = '__';
 
 const Module = (props) => {
   const { children, name, render, attributes, ...meta } = props;
-  const { isComponent, host, style, as, tag, styles, ...rest } = meta;
+  const { isSubComponent, isComponent = isSubComponent, host, style, as, tag, styles, ...rest } = meta;
 
   const prevContext = React.useContext(ModuleContext);
   const ref = host || React.useRef();
@@ -17,7 +18,8 @@ const Module = (props) => {
 
   const localScopePrefix = Object.keys(styles || {})[0];
   const namespace = name || (!isComponent && localScopePrefix) || tag;
-  const fullNamespace = `${prevContext.fullNamespace || prevContext.namespace}${componentGlue}${namespace}`;
+  const rootNamespace = isSubComponent ? prevContext.fullNamespace : prevContext.rootNamespace;
+  const fullNamespace = `${rootNamespace}${componentGlue}${namespace}`;
 
   /** */
 
@@ -36,10 +38,12 @@ const Module = (props) => {
     ...prevContext,
 
     ...(!props.permeable && { 
-      namespace: typeof props.as === 'string' ? prevContext.namespace : namespace
+      namespace: typeof props.as === 'string' ? prevContext.namespace : namespace,
     }),
 
-    ...(isComponent && { fullNamespace }),
+    rootNamespace: prevContext.rootNamespace || namespace,
+
+    ...(isComponent) && { fullNamespace },
 
     ...(!isComponent && props.as && { owner: namespace }),
 
@@ -49,7 +53,6 @@ const Module = (props) => {
   }
 
   /** */
-
   const ATTRIBUTES = Tag !== React.Fragment && {
     ...getEventHandlers(rest),
 
@@ -64,7 +67,7 @@ const Module = (props) => {
     }),
 
     className: generateElementClasses(rest, { 
-      namespace: isComponent? fullNamespace : namespace,  
+      namespace: isComponent ? fullNamespace : namespace,  
       modifierGlue
     }),
 
@@ -82,11 +85,13 @@ const Module = (props) => {
 
 Module.modifiers = props => ([...Object.keys(props), ...(props.modifiers || [])]);
 
+Module.context = useModuleContext;
+
 export default Module; 
 
 /** */
 export const Component = props => <Module isComponent {...props} />;
-export const SubComponent = props => <Module isComponent {...props} />;
+export const SubComponent = props => <Module isSubComponent {...props} />;
 
 /** */
 function getEventHandlers(props) {
