@@ -1,4 +1,4 @@
-import Module, { Component, SubComponent } from './components/module';
+import { Module, Component, SubComponent } from './components/module';
 import Wrapper, { Group } from './components/wrapper';
 import ThemeProvider from './components/provider';
 

@@ -1,8 +1,8 @@
 import ThemeContext from '../contexts/theme';
 import evalTheme from '../utilities/evalTheme';
 
-export default () => {
-  const theme= React.useContext(ThemeContext);
+export default (context = ThemeContext) => {
+  const theme = React.useContext(context);
 
   return evalTheme(theme);
 }

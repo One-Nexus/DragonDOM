@@ -1,6 +1,9 @@
-import { htmlElementAttributes } from 'html-element-attributes'
+import { htmlElementAttributes } from 'html-element-attributes';
 
 import generateElementClasses from '../utilities/generateElementClasses';
+import getEventHandlers from '../utilities/getEventHandlers';
+import getHtmlAttributes from '../utilities/getHtmlAttributes';
+import getTag from '../utilities/getTag';
 
 import ModuleContext from '../contexts/module';
 import useModuleContext from '../hooks/useModuleContext';
@@ -9,8 +12,8 @@ const modifierGlue = '--';
 const componentGlue = '__';
 
 const Module = (props) => {
-  const { children, name, render, attributes, ...meta } = props;
-  const { isSubComponent, isComponent = isSubComponent, host, style, as, tag, styles, ...rest } = meta;
+  const { children, name, attributes, ...meta } = props;
+  const { isSubComponent, isComponent = isSubComponent, host, style, tag, styles, ...rest } = meta;
 
   const prevContext = React.useContext(ModuleContext);
   const ref = host || React.useRef();
@@ -49,7 +52,6 @@ const Module = (props) => {
 
     [namespace]: { setTag },
 
-    isFusion: isFunctionComponent(props.as) && !isComponent,
   }
 
   /** */
@@ -78,78 +80,23 @@ const Module = (props) => {
 
   return (
     <ModuleContext.Provider value={nextContext}>
-      <Tag {...ATTRIBUTES}>{render || children}</Tag>
+      <Tag {...ATTRIBUTES}>{children}</Tag>
     </ModuleContext.Provider>
   );
 }
 
-Module.modifiers = props => ([...Object.keys(props), ...(props.modifiers || [])]);
-
 Module.context = useModuleContext;
 
-export default Module; 
+const Component = props => <Module isComponent {...props} />;
+const SubComponent = props => <Module isSubComponent {...props} />;
 
-/** */
-export const Component = props => <Module isComponent {...props} />;
-export const SubComponent = props => <Module isSubComponent {...props} />;
+Object.keys(htmlElementAttributes).forEach(key => {
+  [Module, Component, SubComponent].forEach(Block => {
+    Block[key] = props => <Block tag={key} {...props} />;
+  });
+});
 
-/** */
-function getEventHandlers(props) {
-  return Object.keys(props).filter(key => isEventHandler(key)).reduce((accumulator, key) => {
-    accumulator[key] = props[key]
-    
-    return accumulator;
-  }, {})
-}
-
-/** */
-function getHtmlAttributes(props, tag) {
-  let inputAttributes = {}
-
-  for (let prop in props) {
-    if (htmlElementAttributes['*'].includes(prop)) {
-      inputAttributes[prop] = props[prop];
-    }
-    if (typeof tag === 'string' && htmlElementAttributes[tag].includes(prop)) {
-      inputAttributes[prop] = props[prop];
-    }
-    if (prop === 'group') {
-      inputAttributes.name = props[prop];
-    }
-  }
-
-  return inputAttributes;
-}
-
-/** */
-function isEventHandler(key) {
-  return key.startsWith('on') && key[2] === key[2].toUpperCase();
-}
-
-/** */
-function getTag(props) {
-  if (typeof props.as === 'function' && props.as.name[0] === props.as.name[0].toUpperCase()) {
-    return props.as;
-  }
-
-  if (typeof props.as === 'function' && props.as?.prototype?.isReactComponent) {
-    return props.as;
-  }
-
-  if (props.component) {
-    return props.component;
-  }
-
-  if (typeof props.as === 'string') {
-    return Component;
-  }
-
-  if (props.tag) {
-    return props.tag;
-  }
-
-  return 'div';
-}
+export { Module, Component, SubComponent }; 
 
 /** */
 function isFunctionComponent(component) {

@@ -1,7 +1,9 @@
 import getModifiersFromProps from './getModifiersFromProps';
 
 export default function generateElementClasses(props, { namespace, modifierGlue, singleClass = true }) {
-  let CLASSES = props.className ? props.className + ' ' : '', MODIFIERS = [];
+  let CLASSES = props.className ? props.className + ' ' : '';
+
+  let MODIFIERS = [];
 
   props.modifiers && MODIFIERS.push(...props.modifiers);
 
