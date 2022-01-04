@@ -1,7 +1,7 @@
 import deepextend from '../utilities/deepMergeObjects';
 import useTheme from './useTheme';
 
-export default (config = {}, theme = useTheme(), props) => {
+export default (config = {}, props, theme = useTheme()) => {
   let CONFIG = config;
 
   if (config.config && !props) {
