@@ -1,3 +1,5 @@
+import { Component } from "../components/module";
+
 function getTag(props) {
   if (typeof props.as === 'function' && props.as.name[0] === props.as.name[0].toUpperCase()) {
     return props.as;
